@@ -1,29 +1,57 @@
-from dash import Dash, dcc, html
+from dash import Dash, dcc, html, Output, Input
 import plotly.graph_objects as go
-from binance import ThreadedWebsocketManager
+from binance.client import Client
 import pandas as pd
+import os
+
+# Binance API anahtarları (ortam değişkenlerinden alıyoruz)
+api_key = os.environ.get('BINANCE_API_KEY')
+api_secret = os.environ.get('BINANCE_API_SECRET')
+
+client = Client(api_key, api_secret)
 
 # Dash uygulaması
 app = Dash(__name__)
+server = app.server  # Bu satırı ekliyoruz
 
-# Layout
+# Başlangıç verisi
+def get_data():
+    klines = client.get_historical_klines("BTCUSDT", Client.KLINE_INTERVAL_1MINUTE, "1 hour ago UTC")
+    df = pd.DataFrame(klines, columns=['Open Time', 'Open', 'High', 'Low', 'Close',
+                                       'Volume', 'Close Time', 'Quote Asset Volume',
+                                       'Number of Trades', 'Taker Buy Base Asset Volume',
+                                       'Taker Buy Quote Asset Volume', 'Ignore'])
+    df['Open Time'] = pd.to_datetime(df['Open Time'], unit='ms')
+    df['Close'] = df['Close'].astype(float)
+    return df
+
+# Uygulama düzeni
 app.layout = html.Div([
-    dcc.Graph(id='live-graph'),
-    dcc.Interval(id='graph-update', interval=5000)  # 5 saniyede bir güncelle
+    html.H1('BTC/USDT Canlı Fiyat Grafiği'),
+    dcc.Graph(id='live-graph', animate=True),
+    dcc.Interval(
+        id='graph-update',
+        interval=5*1000,  # Her 5 saniyede bir güncelle (5000 milisaniye)
+        n_intervals=0
+    )
 ])
 
-# WebSocket ile veri çekme
-twm = ThreadedWebsocketManager()
-twm.start()
-twm.start_symbol_ticker_socket(symbol='BTCUSDT', callback=lambda msg: update_graph(msg))
-
-# Grafik güncelleme fonksiyonu
-def update_graph(msg):
-    # Veriyi işle ve grafiği güncelle
-    # (Örnek: Son fiyatı ekle)
-    pass
-app = Dash(__name__)
-server = app.server  # Bu satırı ekleyin
+# Grafiği güncelleyen callback fonksiyonu
+@app.callback(Output('live-graph', 'figure'),
+              Input('graph-update', 'n_intervals'))
+def update_graph_live(n):
+    df = get_data()
+    fig = go.Figure()
+    fig.add_trace(go.Scatter(
+        x=df['Open Time'],
+        y=df['Close'],
+        mode='lines',
+        name='BTCUSDT'
+    ))
+    fig.update_layout(title='BTC/USDT Canlı Fiyat Grafiği',
+                      xaxis_title='Zaman',
+                      yaxis_title='Fiyat (USDT)')
+    return fig
 
 if __name__ == '__main__':
     app.run_server(debug=True)
