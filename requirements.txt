@@ -1,8 +1,7 @@
 dash==2.14.2
-gunicorn==21.2.0
-plotly==5.18.0
-pandas==2.1.4
 python-binance==1.0.19
 flask==3.0.2
+gunicorn==21.2.0
 gevent==23.9.1
-python-dotenv==1.0.0
+pandas==2.1.4
+plotly==5.18.0
