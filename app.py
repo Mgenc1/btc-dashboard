@@ -1,6 +1,6 @@
 from dash import Dash, dcc, html, Output, Input
 import plotly.graph_objects as go
-from binance.client import Client
+from binance import Client
 import pandas as pd
 import os
 
