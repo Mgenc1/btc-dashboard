@@ -5,14 +5,14 @@ import pandas as pd
 import os
 
 # Binance API anahtarları (ortam değişkenlerinden alıyoruz)
-api_key = os.environ.get('BINANCE_API_KEY')
-api_secret = os.environ.get('BINANCE_API_SECRET')
+api_key = os.environ.get('IfruJmZdcoKFYaGU80djwrf9T44lAfMX80MQ2CxMNFYt3Abskxsvok5TUXfUOEQv')
+api_secret = os.environ.get('a5LrVcYZ2a8QA9w5EkAUKebTfmCW8xdunrOIuwKwyCFcFDPfQOrEw4oGLk8SOd6k')
 
 client = Client(api_key, api_secret)
 
 # Dash uygulaması
 app = Dash(__name__)
-server = app.server  # Bu satırı ekliyoruz
+server = app.server  # Render için gerekli
 
 # Başlangıç verisi
 def get_data():
@@ -54,4 +54,5 @@ def update_graph_live(n):
     return fig
 
 if __name__ == '__main__':
-    app.run_server(debug=True)
+    port = int(os.environ.get("PORT", 8050))
+    app.run_server(debug=True, host='0.0.0.0', port=port)
